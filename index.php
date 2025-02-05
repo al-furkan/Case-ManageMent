@@ -452,13 +452,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           } else {
           ?>
             <div class="row">
+            <?php
+// Queries to get counts for different cases
+$allCasesQuery = "SELECT COUNT(*) AS total FROM cases";
+$runningCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE status = 'running'";
+$todaysCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE DATE(hearing_date) = CURDATE()";
+$tomorrowsCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE DATE(hearing_date) = CURDATE() + INTERVAL 1 DAY";
+$notUpdatedCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE last_updated IS NULL OR last_updated = ''";
+$todaysNotesQuery = "SELECT COUNT(*) AS total FROM notes WHERE DATE(note_date) = CURDATE()";
+$decidedCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE status = 'decided'";
+$abandonedCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE status = 'abandoned'";
+
+// Execute queries
+$allCases = $conn->query($allCasesQuery)->fetch_assoc()['total'];
+$runningCases = $conn->query($runningCasesQuery)->fetch_assoc()['total'];
+$todaysCases = $conn->query($todaysCasesQuery)->fetch_assoc()['total'];
+$tomorrowsCases = $conn->query($tomorrowsCasesQuery)->fetch_assoc()['total'];
+$notUpdatedCases = $conn->query($notUpdatedCasesQuery)->fetch_assoc()['total'];
+$todaysNotes = $conn->query($todaysNotesQuery)->fetch_assoc()['total'];
+$decidedCases = $conn->query($decidedCasesQuery)->fetch_assoc()['total'];
+$abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
+?>
+
               <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
                 <div class="card">
                   <div class="card-body">
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">222</h3>
+                        <h3 class="mb-0"><?php echo $allCases; ?></h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">Cases</p>
                         </div>
                       </div>
@@ -479,7 +501,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">190</h3>
+                        <h3 class="mb-0"><?php echo $runningCases; ?></h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">Cases</p>
                         </div>
                       </div>
@@ -499,7 +521,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">5</h3>
+                        <h3 class="mb-0"><?php echo $todaysCases; ?></h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">Cases</p>
                         </div>
                       </div>
@@ -519,7 +541,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">2</h3>
+                        <h3 class="mb-0"><?php echo $tomorrowsCases; ?></h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">Cases</p>
                         </div>
                       </div>
@@ -539,7 +561,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">24</h3>
+                        <h3 class="mb-0"><?php echo $notUpdatedCases; ?></h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">Cases</p>
                         </div>
                       </div>
@@ -559,7 +581,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">0</h3>
+                        <h3 class="mb-0"><?php echo $todaysNotes; ?></h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">Notes</p>
                         </div>
                       </div>
@@ -580,7 +602,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">62</h3>
+                        <h3 class="mb-0"><?php echo $decidedCases; ?></h3>
                           <p class="text-danger ml-2 mb-0 font-weight-medium">Cases</p>
                         </div>
                       </div>
@@ -600,7 +622,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">8</h3>
+                        <h3 class="mb-0"><?php echo $abandonedCases; ?></h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">Cases</p>
                         </div>
                       </div>
