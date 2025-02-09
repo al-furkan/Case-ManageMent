@@ -11,6 +11,6 @@ if ($conn->query($sql) === TRUE) {
 }
 
 $conn->close();
-header("Location: view.php");
+header("Location: ../index.php?dailynotes=1");
 exit();
 ?>

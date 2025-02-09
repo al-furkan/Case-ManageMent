@@ -12,9 +12,10 @@ $conn = new mysqli($servername, $username, $password, $database);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
 // Handle form submission to add a court
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $court_name = $_POST['court_name'];
+    $court_name = trim($_POST['court_name']);
 
     if (!empty($court_name)) {
         $query = "INSERT INTO courts (court_name) VALUES (?)";
@@ -22,13 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->bind_param("s", $court_name);
 
         if ($stmt->execute()) {
-            echo "<script>alert('Court added successfully!');</script>";
-            echo "<script>window.open('./codesetup.php', '_self');</script>";
-
+            echo "<script>
+                    Swal.fire('Success!', 'Court added successfully!', 'success')
+                    .then(() => window.location.href = './codesetup.php');
+                  </script>";
+                  echo "<script>window.location.href = '../index.php?courtsetup=1';</script>";
         } else {
-            echo "<script>alert('Error: " . $stmt->error . "');</script>";
+            echo "<script>Swal.fire('Error!', 'Failed to add court!', 'error');</script>";
         }
         $stmt->close();
+    } else {
+        echo "<script>Swal.fire('Warning!', 'Court name cannot be empty!', 'warning');</script>";
     }
 }
 
@@ -37,11 +42,6 @@ $query = "SELECT * FROM courts ORDER BY court_name ASC";
 $result = $conn->query($query);
 ?>
 
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -49,43 +49,70 @@ $result = $conn->query($query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Court Management</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        .card {
-            border-radius: 8px;
-        }
+    body {
+        background: #f8f9fa;
+        font-family: 'Poppins', sans-serif;
+    }
 
-        .table thead th {
-            background-color: #007bff;
-            color: white;
-        }
+    .container {
+        max-width: 700px;
+        margin-top: 50px;
+    }
 
-        .table tbody td {
-            vertical-align: middle;
-        }
+    .card {
+        border-radius: 12px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
 
-        .btn-success {
-            border-radius: 50%;
-        }
+    .btn-primary {
+        background: #007bff;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+
+    .btn-danger {
+        background: #ff4b5c;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: #d63345;
+    }
+
+    .table thead th {
+        background: #007bff;
+        color: white;
+    }
     </style>
 </head>
 
 <body>
-    <div class="container mt-5">
-        <h1 class="mb-4">Court <small class="text-muted">Add all courts</small></h1>
+    <div class="container">
+        <h1 class="text-center text-white">🏛 Court Management</h1>
+        <p class="text-center text-white">Add and manage courts efficiently.</p>
+
         <div class="card mb-4">
             <div class="card-body">
+                <h5 class="card-title">➕ Add Court</h5>
                 <form action="./MasterSetup/codesetup.php" method="POST" class="d-flex">
-                    <input type="text" name="court_name" class="form-control me-2" placeholder="Enter court name here" required>
+                    <input type="text" name="court_name" class="form-control me-2" placeholder="Enter court name"
+                        required>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header bg-primary text-white">All Court Names</div>
+            <div class="card-header bg-primary text-white">🏦 Court List</div>
             <div class="card-body p-0">
-                <table class="table table-bordered table-striped mb-0">
+                <table class="table table-bordered text-center mb-0">
                     <thead>
                         <tr>
                             <th>Court Name</th>
@@ -94,37 +121,52 @@ $result = $conn->query($query);
                         </tr>
                     </thead>
                     <tbody>
-                        <?php
-                        if ($result->num_rows > 0) {
-                            while ($row = $result->fetch_assoc()) {
-                                echo "<tr>
-                                <td>{$row['court_name']}</td>
-                                <td class='text-center'>
-                                    <a href='edit_court.php?id={$row['id']}' class='btn btn-sm btn-success'>
-                                        <i class='bi bi-pencil'></i> Edit
-                                    </a>
-                                </td>
-                                <td class='text-center'>
-                                    <a href='courtdelete.php?id={$row['id']}' 
-                                       class='btn btn-sm btn-danger' 
-                                       onclick='return confirm(\"Are you sure you want to delete this court?\")'>
-                                        <i class='bi bi-trash'></i> Delete
-                                    </a>
-                                </td>
-                              </tr>";
-                            }
-                        } else {
-                            echo "<tr><td colspan='3' class='text-center'>No courts found</td></tr>";
-                        }
-                        ?>
+                        <?php if ($result->num_rows > 0) {
+                            while ($row = $result->fetch_assoc()) { ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['court_name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td>
+                                <a href="./MasterSetup/edit_court.php?id=<?= $row['id']; ?>"
+                                    class="btn btn-sm btn-success">
+                                    ✏ Edit
+                                </a>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(<?= $row['id']; ?>)">
+                                    🗑 Delete
+                                </button>
+                            </td>
+                        </tr>
+                        <?php } } else { ?>
+                        <tr>
+                            <td colspan='3' class='text-center text-muted'>No courts found</td>
+                        </tr>
+                        <?php } ?>
                     </tbody>
                 </table>
             </div>
         </div>
-
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function confirmDelete(id) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "This court will be permanently deleted!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `./MasterSetup/courtdelete.php?id=${id}`;
+            }
+        });
+    }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

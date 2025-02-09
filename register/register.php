@@ -1,68 +1,54 @@
 <?php
-// Database credentials
+// Database connection
 $servername = 'localhost';
 $username = 'root';
 $password = '';
 $database = 'case-management';
 
-// Create a connection
 $conn = new mysqli($servername, $username, $password, $database);
-
-// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $status = $_POST['status'];
 
     // Handle image upload
     $image = $_FILES['image'];
-    $imageName = time() . '_' . basename($image['name']); // Create a unique name for the image
-    $targetDir = "uploads/"; // Directory where images will be saved
+    $imageName = time() . '_' . basename($image['name']);
+    $targetDir = "uploads/";
     $targetFile = $targetDir . $imageName;
-    $uploadOk = 1;
     $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
 
-    // Check if image file is a actual image or fake image
+    // Image validation
     $check = getimagesize($image['tmp_name']);
     if ($check === false) {
-        echo "File is not an image.";
-        $uploadOk = 0;
+        die("<script>alert('File is not an image.'); window.history.back();</script>");
     }
 
-    // Check file size (limit to 5MB)
     if ($image['size'] > 5000000) {
-        echo "Sorry, your file is too large.";
-        $uploadOk = 0;
+        die("<script>alert('File is too large.'); window.history.back();</script>");
     }
 
-    // Allow certain file formats
-    if (!in_array($imageFileType, ['jpg', 'png', 'jpeg', 'gif'])) {
-        echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-        $uploadOk = 0;
+    if (!in_array($imageFileType, ['jpg', 'jpeg', 'png', 'gif'])) {
+        die("<script>alert('Only JPG, JPEG, PNG & GIF are allowed.'); window.history.back();</script>");
     }
 
-    // Check if $uploadOk is set to 0 by an error
-    if ($uploadOk == 0) {
-        echo "Sorry, your file was not uploaded.";
-    } else {
-        // If everything is ok, try to upload file
-        if (move_uploaded_file($image['tmp_name'], $targetFile)) {
-            // Insert user data into the database
-            $sql = "INSERT INTO users (Name, Image, email, password, status) VALUES ('$name', '$targetFile', '$email', '$password', '$status')";
-            
-            if ($conn->query($sql) === TRUE) {
-                echo "New record created successfully ";
-            } else {
-                echo "Error: " . $sql . "<br>" . $conn->error;
-            }
+    if (move_uploaded_file($image['tmp_name'], $targetFile)) {
+        $stmt = $conn->prepare("INSERT INTO users (Name, Image, email, password, status) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $name, $targetFile, $email, $password, $status);
+
+        if ($stmt->execute()) {
+            echo "<script>alert('User registered successfully!'); window.location.href='../index.php?register=1';</script>";
         } else {
-            echo "Sorry, there was an error uploading your file.";
+            echo "<script>alert('Error: " . $stmt->error . "');</script>";
         }
+        $stmt->close();
+    } else {
+        echo "<script>alert('Error uploading file.');</script>";
     }
 }
 
@@ -71,52 +57,120 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <title>Insert User</title>
     <style>
-        #imagePreview {
-            display: none;
-            max-width: 200px; /* Set a max width for the preview */
-            margin-top: 10px;
+    body {
+        background-color: #121212;
+        color: #ffffff;
+        padding: 20px;
+    }
+
+    .container {
+        background: #1e1e1e;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+        max-width: 600px;
+        margin: auto;
+    }
+
+    .form-control {
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+    }
+
+    .form-control:focus {
+        background-color: #444;
+        color: white;
+        border-color: #007bff;
+    }
+
+    label {
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+        width: 100%;
+        padding: 10px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    #imagePreview {
+        display: none;
+        max-width: 100%;
+        height: auto;
+        margin-top: 10px;
+        border-radius: 5px;
+        border: 2px solid #007bff;
+    }
+
+    /* Responsive Layout */
+    @media (max-width: 768px) {
+        .container {
+            width: 90%;
+            padding: 20px;
         }
+    }
+
+    @media (max-width: 576px) {
+        h2 {
+            font-size: 1.5rem;
+            text-align: center;
+        }
+    }
     </style>
 </head>
-<body>
-<div class="container">
-    <h2>Insert User</h2>
-    <form method="POST" action="./register/register.php" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-        </div>
-        <div class="form-group">
-            <label for="image">Image Upload:</label>
-            <input type="file" class="form-control" id="image" name="image" accept="image/*" required onchange="previewImage(event)">
-            <img id="imagePreview" src="#" alt="Image Preview">
-        </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" class="form-control" id="email" name="email" required>
-        </div>
-        <div class="form-group">
-            <label for="password">Password:</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-        </div>
-        <div class="form-group">
-            <label for="status">Status:</label>
-            <select class="form-control" id="status" name="status">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-        </div>
-        <button type="submit" class="btn btn -primary">Submit</button>
-    </form>
-</div>
 
-<script>
+<body>
+    <div class="container">
+        <h2 class="text-white text-center">Insert User</h2>
+        <form method="POST" action="./register/register.php" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="image">Image Upload:</label>
+                <input type="file" class="form-control" id="image" name="image" accept="image/*" required
+                    onchange="previewImage(event)">
+                <img id="imagePreview" src="#" alt="Image Preview">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select class="form-control" id="status" name="status">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <script>
     function previewImage(event) {
         const imagePreview = document.getElementById('imagePreview');
         const file = event.target.files[0];
@@ -124,16 +178,17 @@ $conn->close();
 
         reader.onload = function() {
             imagePreview.src = reader.result;
-            imagePreview.style.display = 'block'; // Show the image preview
+            imagePreview.style.display = 'block';
         }
 
         if (file) {
-            reader.readAsDataURL(file); // Convert the file to a data URL
+            reader.readAsDataURL(file);
         } else {
-            imagePreview.src = '#'; // Reset the image preview
-            imagePreview.style.display = 'none'; // Hide the image preview
+            imagePreview.src = '#';
+            imagePreview.style.display = 'none';
         }
     }
-</script>
+    </script>
 </body>
+
 </html>
