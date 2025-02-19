@@ -1,10 +1,22 @@
 <?php
+// Database credentials
+$servername = 'localhost';
+$username = 'root';
+$password = '';
+$database = 'case-management';
+
+// Create a connection
+$conn = new mysqli($servername, $username, $password, $database);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   // Include database connection
-  $conn = new mysqli('localhost', 'username', 'password', 'database_name');
-  if ($conn->connect_error) {
-    die('Database connection failed: ' . $conn->connect_error);
-  }
 
   // Sanitize and validate input data
   $fileNo = htmlspecialchars(trim($_POST['fileNo']));
@@ -24,8 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
   // Use a prepared statement to insert data
   $query = "INSERT INTO cases 
-              (fileNo, caseNo, case_type, court, police_stations, date, fixedFor, firstParty, secondParty, mobileNo, appointedBy, lawSection, comments, status) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            (`fileNo`, `caseNo`, `case_types`, `court`, `police_stations`, `date`, `fixedFor`, `firstParty`, `secondParty`, `mobileNo`, `appointedBy`, `lawSection`, `comments`, `status`) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   $stmt = $conn->prepare($query);
 
   if ($stmt === false) {
@@ -51,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   );
 
   if ($stmt->execute()) {
-    header('Location: ./allCases.php');
+    header('Location: ../index.php?allcase=1');
     exit();
   } else {
     echo "<script>alert('Error: " . $stmt->error . "');</script>";
@@ -116,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="form-container">
                     <h1 class="form-title">New Case</h1>
                     <p class="form-subtitle">Add new case</p>
-                    <form id="caseForm" action="./index.php" method="POST" enctype="multipart/form-data">
+                    <form id="caseForm" action="./Case/addNewcase.php" method="POST" enctype="multipart/form-data">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="fileNo" class="form-label">File No</label>
@@ -165,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </div>
                             <div class="col-md-6">
                                 <label for="policeStation" class="form-label">Police Station</label>
-                                <select class="form-select" id="policeStation" name="policeStation">
+                                <select class="form-select" id="policeStation" name="policeStation" required>
                                     <option selected disabled>--Select Police Station--</option>
                                     <?php 
                 $query = "SELECT id, name FROM police_stations";
@@ -181,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                             </div>
                             <div class="col-md-6">
-                                <label for="date" class="form-label">Date*</label>
+                                <label for="date" class="form-label">📅 Date:</label>
                                 <input type="date" class="form-control" id="date" name="date" required>
                             </div>
                             <div class="col-md-6">
@@ -223,9 +235,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <label for="status" class="form-label">Status*</label>
                                 <select class="form-select" id="status" name="status" required>
                                     <option selected disabled>--Select Status--</option>
-                                    <option value="open">Open</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="closed">Closed</option>
+                                    <option value="Running">Running</option>
+                                    <option value="Decided">Decided</option>
+                                    <option value="Abandoned">Abandoned</option>
                                 </select>
                             </div>
                         </div>

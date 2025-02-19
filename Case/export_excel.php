@@ -1,65 +1,64 @@
 <?php
-require 'vendor/autoload.php'; // For PhpSpreadsheet
+require 'vendor/autoload.php'; // Load PHPExcel via Composer
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 // Database connection
-include 'db.php';
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "case-management";
 
-$sql = "SELECT `id`, `fileNo`, `caseNo`, `caseType`, `court`, `policeStation`, `date`, 
-        `fixedFor`, `firstParty`, `secondParty`, `mobileNo`, `appointedBy`, 
-        `lawSection`, `comments`, `status` FROM `cases`";
+$conn = new mysqli($servername, $username, $password, $database);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Create a new spreadsheet
+$spreadsheet = new Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
+
+// Set column headers
+$sheet->setCellValue('A1', 'File No')
+      ->setCellValue('B1', 'Case Type')
+      ->setCellValue('C1', 'Case No')
+      ->setCellValue('D1', 'Court')
+      ->setCellValue('E1', 'Police Station')
+      ->setCellValue('F1', 'Law & Section')
+      ->setCellValue('G1', 'Previous Date')
+      ->setCellValue('H1', 'Next Date')
+      ->setCellValue('I1', 'Fixed For')
+      ->setCellValue('J1', 'Status');
+
+// Fetch case records
+$sql = "SELECT `fileNo`, `case_types`, `caseNo`, `court`, `police_stations`, `lawSection`, `date`, `fixedFor`, `status` FROM `cases`";
 $result = $conn->query($sql);
 
 if ($result->num_rows > 0) {
-    $spreadsheet = new Spreadsheet();
-    $sheet = $spreadsheet->getActiveSheet();
-
-    // Set column headers
-    $sheet->setCellValue('A1', 'File No')
-          ->setCellValue('B1', 'Case Type')
-          ->setCellValue('C1', 'Case No')
-          ->setCellValue('D1', 'Court')
-          ->setCellValue('E1', 'Police Station')
-          ->setCellValue('F1', '1st Party')
-          ->setCellValue('G1', '2nd Party')
-          ->setCellValue('H1', 'Mobile No')
-          ->setCellValue('I1', 'Appointed By')
-          ->setCellValue('J1', 'Law Section')
-          ->setCellValue('K1', 'Previous Date')
-          ->setCellValue('L1', 'Next Date')
-          ->setCellValue('M1', 'Fixed For')
-          ->setCellValue('N1', 'Status');
-
-    // Populate rows
-    $rowNumber = 2;
+    $rowIndex = 2; // Start inserting data from row 2
     while ($row = $result->fetch_assoc()) {
-        $sheet->setCellValue("A$rowNumber", $row['fileNo'])
-              ->setCellValue("B$rowNumber", $row['caseType'])
-              ->setCellValue("C$rowNumber", $row['caseNo'])
-              ->setCellValue("D$rowNumber", $row['court'])
-              ->setCellValue("E$rowNumber", $row['policeStation'])
-              ->setCellValue("F$rowNumber", $row['firstParty'])
-              ->setCellValue("G$rowNumber", $row['secondParty'])
-              ->setCellValue("H$rowNumber", $row['mobileNo'])
-              ->setCellValue("I$rowNumber", $row['appointedBy'])
-              ->setCellValue("J$rowNumber", $row['lawSection'])
-              ->setCellValue("K$rowNumber", $row['date'])
-              ->setCellValue("L$rowNumber", $row['date'])
-              ->setCellValue("M$rowNumber", $row['fixedFor'])
-              ->setCellValue("N$rowNumber", $row['status']);
-        $rowNumber++;
+        $sheet->setCellValue('A' . $rowIndex, $row['fileNo'])
+              ->setCellValue('B' . $rowIndex, $row['case_types'])
+              ->setCellValue('C' . $rowIndex, $row['caseNo'])
+              ->setCellValue('D' . $rowIndex, $row['court'])
+              ->setCellValue('E' . $rowIndex, $row['police_stations'])
+              ->setCellValue('F' . $rowIndex, $row['lawSection'])
+              ->setCellValue('G' . $rowIndex, $row['date'])
+              ->setCellValue('H' . $rowIndex, $row['date'])
+              ->setCellValue('I' . $rowIndex, $row['fixedFor'])
+              ->setCellValue('J' . $rowIndex, $row['status']);
+        $rowIndex++;
     }
-
-    // Save the Excel file
-    $writer = new Xlsx($spreadsheet);
-    $filename = "case_data.xlsx";
-
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    header("Content-Disposition: attachment; filename=\"$filename\"");
-    $writer->save('php://output');
-    exit();
-} else {
-    echo "No data found!";
 }
+
+// Set the header to download the file
+$filename = "cases_export.xlsx";
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header('Content-Disposition: attachment;filename="' . $filename . '"');
+header('Cache-Control: max-age=0');
+
+$writer = new Xlsx($spreadsheet);
+$writer->save('php://output');
+exit;
 ?>

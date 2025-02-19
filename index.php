@@ -6,64 +6,6 @@ if (!isset($_SESSION['id'])) {
   exit();
 }
 ?>
-<?php
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Sanitize and validate input data
-    $fileNo = htmlspecialchars(trim($_POST['fileNo']));
-    $caseNo = htmlspecialchars(trim($_POST['caseNo']));
-    $caseType = htmlspecialchars(trim($_POST['caseType']));
-    $court = htmlspecialchars(trim($_POST['court']));
-    $policeStation = htmlspecialchars(trim($_POST['policeStation']));
-    $date = htmlspecialchars(trim($_POST['date']));
-    $fixedFor = htmlspecialchars(trim($_POST['fixedFor']));
-    $firstParty = htmlspecialchars(trim($_POST['firstParty']));
-    $secondParty = htmlspecialchars(trim($_POST['secondParty']));
-    $mobileNo = htmlspecialchars(trim($_POST['mobileNo']));
-    $appointedBy = htmlspecialchars(trim($_POST['appointedBy']));
-    $lawSection = htmlspecialchars(trim($_POST['lawSection']));
-    $comments = htmlspecialchars(trim($_POST['comments']));
-    $status = htmlspecialchars(trim($_POST['status']));
-
-    // Use a prepared statement to insert data
-    $query = "INSERT INTO cases 
-              (fileNo, caseNo, caseType, court, policeStation, date, fixedFor, firstParty, secondParty, mobileNo, appointedBy, lawSection, comments, status) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($query);
-
-    if ($stmt === false) {
-        die('Prepare failed: ' . $conn->error);
-    }
-
-    $stmt->bind_param(
-        "ssssssssssssss",
-        $fileNo,
-        $caseNo,
-        $caseType,
-        $court,
-        $policeStation,
-        $date,
-        $fixedFor,
-        $firstParty,
-        $secondParty,
-        $mobileNo,
-        $appointedBy,
-        $lawSection,
-        $comments,
-        $status
-    );
-
-    if ($stmt->execute()) {
-        header('Location: ./allCases.php');
-        exit();
-    } else {
-        echo "<script>alert('Error: " . $stmt->error . "');</script>";
-    }
-
-    $stmt->close();
-    $conn->close();
-}
-?>
 
 
 <!DOCTYPE html>
@@ -204,27 +146,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['runningcase']) ? 'active' : ''); ?>"
-                                    href="./index.php?runningcase=1">Running Cases</a>
+                                    href="./Case/RunningCase.php">Running Cases</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['todaycase']) ? 'active' : ''); ?>"
-                                    href="./index.php?todaycase=1">Today's Cases</a>
+                                    href="./Case/TodayCases.php">Today's Cases</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['tomorocase']) ? 'active' : ''); ?>"
-                                    href="./index.php?tomorocase=1">Tomorrow's Cases</a>
+                                    href="./Case/TomorrowCases.php">Tomorrow's Cases</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['updatecase']) ? 'active' : ''); ?>"
-                                    href="./index.php?updatecase=1">Not Updated Cases</a>
+                                    href="./Case/NotUpdateCases.php">Not Updated Cases</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['decidedcase']) ? 'active' : ''); ?>"
-                                    href="./index.php?decidedcase=1">Decided Cases</a>
+                                    href="./Case/DecidedCases.php">Decided Cases</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['abandonedcase']) ? 'active' : ''); ?>"
-                                    href="./index.php?abandonedcase=1">Abandoned Cases</a>
+                                    href="./Case/AbandonedCases.php">Abandoned Cases</a>
                             </li>
                         </ul>
                     </div>
@@ -336,10 +278,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <ul class="navbar-nav navbar-nav-right">
                         <li class="nav-item dropdown d-none d-lg-block">
                             <a class="nav-link btn btn-success create-new-button" id="createbuttonDropdown"
-                                data-toggle="dropdown" aria-expanded="false" href="#">+ Create New case</a>
+                                data-toggle="dropdown" aria-expanded="false" href="./Case/addNewcase.php">+ Create New
+                                case</a>
                             <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list"
                                 aria-labelledby="createbuttonDropdown">
-                                <a class="dropdown-item preview-item">
+                                <a class="dropdown-item preview-item" href="./index.php?caseadd=1">
                                     <div class="preview-thumbnail">
                                         <div class="preview-icon bg-dark rounded-circle">
                                             <i class="mdi mdi-file-outline text-primary"></i>
@@ -351,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     </div>
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item preview-item">
+                                <a class="dropdown-item preview-item" href="./Case/allCases.php">
                                     <div class="preview-thumbnail">
                                         <div class="preview-icon bg-dark rounded-circle">
                                             <i class="mdi mdi-web text-info"></i>
@@ -509,9 +452,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-success ">
-                                                <span class="mdi mdi-arrow-top-right icon-item"></span>
-                                            </div>
+                                            <a href="./Case/allCases.php">
+                                                <div class="icon icon-box-success ">
+                                                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">All Cases</h6>
@@ -530,9 +475,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-success">
-                                                <span class="mdi mdi-arrow-top-right icon-item"></span>
-                                            </div>
+                                            <a href="./Case/RunningCase.php">
+                                                <div class="icon icon-box-success">
+                                                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">Running Cases</h6>
@@ -550,9 +497,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-success">
-                                                <span class="mdi mdi-arrow-top-right icon-item"></span>
-                                            </div>
+                                            <a href="./Case/TodayCases.php">
+                                                <div class="icon icon-box-success">
+                                                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">Today's Cases</h6>
@@ -570,9 +519,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-success">
-                                                <span class="mdi mdi-arrow-top-right icon-item"></span>
-                                            </div>
+                                            <a href="./Case/TomorrowCases.php">
+                                                <div class="icon icon-box-success">
+                                                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">Tomorrow's Cases</h6>
@@ -590,9 +541,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-success">
-                                                <span class="mdi mdi-arrow-top-right icon-item"></span>
-                                            </div>
+                                            <a href="./Case/NotUpdateCases.php">
+                                                <div class="icon icon-box-success">
+                                                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">Not Updated Cases</h6>
@@ -610,9 +563,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-success">
-                                                <span class="mdi mdi-arrow-top-right icon-item"></span>
-                                            </div>
+                                            <a href="./index.php?dailynotes=1">
+                                                <div class="icon icon-box-success">
+                                                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">Today's Notes</h6>
@@ -631,9 +586,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-danger">
-                                                <span class="mdi mdi-arrow-bottom-left icon-item"></span>
-                                            </div>
+                                            <a href="./Case/DecidedCases.php">
+                                                <div class="icon icon-box-danger">
+                                                    <span class="mdi mdi-arrow-bottom-left icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">Decided Cases</h6>
@@ -651,9 +608,11 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <div class="icon icon-box-success ">
-                                                <span class="mdi mdi-arrow-top-right icon-item"></span>
-                                            </div>
+                                            <a href="./Case/AbandonedCases.php">
+                                                <div class="icon icon-box-success ">
+                                                    <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                </div>
+                                            </a>
                                         </div>
                                     </div>
                                     <h6 class="text-muted font-weight-normal">Abandoned Cases</h6>

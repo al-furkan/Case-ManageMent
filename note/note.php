@@ -28,6 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 window.location.href = '../index.php?dailynotes=1';
             });
         </script>";
+        echo "<script>window.location.href = '../index.php?dailynotes=1';</script>";
     } else {
         echo "<script>
             Swal.fire({
@@ -106,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <!-- Form -->
-            <form id="noteForm" action="./note/note.php?dailynotes=1" method="post">
+            <form id="noteForm" action="./note/note.php" method="post">
                 <div class="form-group">
                     <label for="note_date">📅 Date:</label>
                     <input type="date" name="note_date" id="note_date" class="form-control" required>
