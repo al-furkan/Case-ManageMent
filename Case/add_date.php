@@ -1,28 +1,68 @@
 <?php
-include '..'; // Include database connection
+
+session_start();
+include('../db.php');
+if (!isset($_SESSION['id'])) {
+  header("Location: login.php");
+  exit();
+
+  
+}
+$Id =  $_SESSION["id"];
+$get_user = "select * from users where id ='$Id'";
+$run_user = mysqli_query($conn, $get_user);
+$row_user=mysqli_fetch_array($run_user);
+ $id = $row_user['id'];
+ $position = $row_user['position'];
+
+  if($position=="admin"){
+
+
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $id = $_POST['id'];
-    $date = $_POST['date'];
-    $fixedFor = $_POST['fixedFor'];
+if (!isset($_POST['case_id']) || empty($_POST['case_id']) || empty($_POST['date']) || empty($_POST['fixedFor'])) {
+header("Location: update_case_date.php?msg=All fields are required!&type=warning");
+exit();
+}
 
-    if (!empty($date) && !empty($fixedFor)) {
-        $sql = "UPDATE cases SET date='$date', fixedFor='$fixedFor', last_updated=NOW() WHERE id=$id";
-        
-        if (mysqli_query($conn, $sql)) {
-            header("Location: index.php?msg=Case date updated successfully!&type=success");
-        } else {
-            header("Location: index.php?msg=Error updating date!&type=danger");
-        }
-    } else {
-        header("Location: index.php?msg=All fields are required!&type=warning");
-    }
-    
-    mysqli_close($conn);
+$case_id = intval($_POST['case_id']); // Securely sanitize case_id
+$date = trim($_POST['date']);
+$fixedFor = trim($_POST['fixedFor']);
+
+// Insert new record into add_date table
+$sql = "INSERT INTO add_date (case_id, date, fixedFor) VALUES (?, ?, ?)";
+$stmt = mysqli_prepare($conn, $sql);
+
+if ($stmt) {
+mysqli_stmt_bind_param($stmt, "iss", $case_id, $date, $fixedFor);
+
+if (mysqli_stmt_execute($stmt)) {
+// Now update the 'last_updated' field in the 'cases' table based on the inserted date
+$updateSql = "UPDATE cases c
+JOIN add_date ad ON c.id = ad.case_id
+SET c.last_updated = ad.date
+WHERE ad.case_id = ?";
+$updateStmt = mysqli_prepare($conn, $updateSql);
+mysqli_stmt_bind_param($updateStmt, "i", $case_id);
+
+if (mysqli_stmt_execute($updateStmt)) {
+header("Location: ./show_details.php?id=$case_id&msg=Case date added and updated successfully!&type=success");
+} else {
+header("Location: show_details.php?id=$case_id&msg=Error updating case!&type=danger");
+}
+mysqli_stmt_close($updateStmt);
+} else {
+header("Location: show_details.php?id=$case_id&msg=Error inserting case date!&type=danger");
+}
+
+mysqli_stmt_close($stmt);
+} else {
+header("Location: show_details.php?id=$case_id&msg=Database error!&type=danger");
+}
+
+mysqli_close($conn);
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -74,36 +114,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
             <div class="card-body">
                 <?php 
-            include '../db.php';
-            if (isset($_GET['id'])) {
-                $id = $_GET['id'];
-                $query = "SELECT * FROM cases WHERE id = $id";
-                $result = mysqli_query($conn, $query);
-                if ($row = mysqli_fetch_assoc($result)) {
-            ?>
+                include '../db.php';
+                if (isset($_GET['id'])) {
+                    $id = intval($_GET['id']);
+                    $query = "SELECT * FROM cases WHERE id = ?";
+                    $stmt = mysqli_prepare($conn, $query);
+                    mysqli_stmt_bind_param($stmt, "i", $id);
+                    mysqli_stmt_execute($stmt);
+                    $result = mysqli_stmt_get_result($stmt);
+
+                    if ($row = mysqli_fetch_assoc($result)) {
+                ?>
 
                 <?php if (isset($_GET['msg'])) { ?>
-                <div class="alert alert-<?php echo $_GET['type']; ?> text-center">
+                <div class="alert alert-<?php echo htmlspecialchars($_GET['type']); ?> text-center">
                     <?php echo htmlspecialchars($_GET['msg']); ?>
                 </div>
                 <?php } ?>
 
-                <form action="update.php" method="POST">
-                    <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                <form action="./add_date.php" method="POST">
+                    <input type="hidden" name="case_id" value="<?php echo $row['id']; ?>">
 
                     <div class="mb-3">
                         <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <input type="date" class="form-control" id="date" name="date"
-                                value="<?php echo $row['date']; ?>" required>
+                            <input type="date" class="form-control" id="date" name="date" required>
                             <span class="input-group-text"><i class="fa fa-calendar"></i></span>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="fixedFor" class="form-label">Fixed For <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="fixedFor" name="fixedFor"
-                            value="<?php echo $row['fixedFor']; ?>" required>
+                        <input type="text" class="form-control" id="fixedFor" name="fixedFor" required>
                     </div>
 
                     <div class="text-center">
@@ -112,13 +154,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </form>
 
                 <?php 
+                    } else {
+                        echo "<div class='alert alert-danger'>Case not found!</div>";
+                    }
+                    mysqli_stmt_close($stmt);
                 } else {
-                    echo "<div class='alert alert-danger'>Case not found!</div>";
+                    echo "<div class='alert alert-danger'>No ID provided!</div>";
                 }
-            } else {
-                echo "<div class='alert alert-danger'>No ID provided!</div>";
-            }
-            ?>
+                mysqli_close($conn);
+                ?>
             </div>
         </div>
     </div>
@@ -132,3 +176,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </body>
 
 </html>
+
+<?php } ?>

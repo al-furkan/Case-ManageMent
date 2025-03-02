@@ -4,7 +4,16 @@ include('./db.php');
 if (!isset($_SESSION['id'])) {
   header("Location: login.php");
   exit();
+
+  
 }
+$Id =  $_SESSION["id"];
+$get_user = "select * from users where id ='$Id'";
+$run_user = mysqli_query($conn, $get_user);
+$row_user=mysqli_fetch_array($run_user);
+ $id = $row_user['id'];
+ $position = $row_user['position'];
+
 ?>
 
 
@@ -116,6 +125,7 @@ if (!isset($_SESSION['id'])) {
                         <span class="menu-title">Dashboard</span>
                     </a>
                 </li>
+                <?php  if($position=="admin"){?>
                 <li class="nav-item menu-items">
                     <a class="nav-link <?php echo (isset($_GET['dailynotes']) ? 'active' : ''); ?>"
                         href="./index.php?dailynotes=1">
@@ -125,6 +135,7 @@ if (!isset($_SESSION['id'])) {
                         <span class="menu-title">Daily Notes</span>
                     </a>
                 </li>
+                <?php } ?>
                 <li class="nav-item menu-items">
                     <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false"
                         aria-controls="ui-basic">
@@ -136,10 +147,12 @@ if (!isset($_SESSION['id'])) {
                     </a>
                     <div class="collapse" id="ui-basic">
                         <ul class="nav flex-column sub-menu">
+                            <?php  if($position=="admin"){?>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['caseadd']) ? 'active' : ''); ?>"
                                     href="./index.php?caseadd=1">Add New Case</a>
                             </li>
+                            <?php } ?>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['allcase']) ? 'active' : ''); ?>"
                                     href="./index.php?allcase=1">All Cases</a>
@@ -179,6 +192,7 @@ if (!isset($_SESSION['id'])) {
                         <span class="menu-title">Master Setup</span>
                         <i class="menu-arrow"></i>
                     </a>
+                    <?php  if($position=="admin"){?>
                     <div class="collapse" id="auth">
                         <ul class="nav flex-column sub-menu">
                             <li class="nav-item">
@@ -203,6 +217,36 @@ if (!isset($_SESSION['id'])) {
                             </li>
                         </ul>
                     </div>
+                    <?php } ?>
+
+                </li>
+                <li class="nav-item menu-items">
+                    <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false" aria-controls="auth">
+                        <span class="menu-icon">
+                            <i class="mdi mdi-security"></i>
+                        </span>
+                        <span class="menu-title">Blog Posts</span>
+                        <i class="menu-arrow"></i>
+                    </a>
+                    <?php  if($position=="admin"){?>
+                    <div class="collapse" id="auth">
+                        <ul class="nav flex-column sub-menu">
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo (isset($_GET['courtsetup']) ? 'active' : ''); ?>"
+                                    href="./blog/insert.php">Insert Blog</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo (isset($_GET['casetype']) ? 'active' : ''); ?>"
+                                    href="./blog/view.php">View Blog</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo (isset($_GET['casetype']) ? 'active' : ''); ?>"
+                                    href="./blog/insert_catagori.php">Insert Catagory</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <?php } ?>
+
                 </li>
                 <li class="nav-item menu-items">
                     <a class="nav-link" href="pages/forms/basic_elements.html">
@@ -220,6 +264,7 @@ if (!isset($_SESSION['id'])) {
                         <span class="menu-title">SMS Sender</span>
                     </a>
                 </li>
+                <?php  if($position=="admin"){?>
                 <li class="nav-item menu-items">
                     <a class="nav-link" href="./register/register.php">
                         <span class="menu-icon">
@@ -228,6 +273,7 @@ if (!isset($_SESSION['id'])) {
                         <span class="menu-title">Register User</span>
                     </a>
                 </li>
+                <?php } ?>
                 <li class="nav-item menu-items">
                     <a class="nav-link" href="">
                         <span class="menu-icon">
@@ -425,7 +471,18 @@ $allCasesQuery = "SELECT COUNT(*) AS total FROM cases";
 $runningCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE status = 'running'";
 $todaysCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE DATE(hearing_date) = CURDATE()";
 $tomorrowsCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE DATE(hearing_date) = CURDATE() + INTERVAL 1 DAY";
-$notUpdatedCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE last_updated IS NULL OR last_updated = ''";
+// Get current date in 'YYYY-MM-DD' format
+$currentdate = date('Y-m-d');
+
+// Query to count not updated cases
+$notUpdatedCasesQuery = "
+    SELECT COUNT(*) AS total 
+    FROM cases c
+    LEFT JOIN add_date ad ON c.id = ad.case_id
+    WHERE (ad.date IS NULL OR ad.date = '0000-00-00' OR ad.date < '$currentdate')
+    AND c.status = 'Running';
+";
+
 $todaysNotesQuery = "SELECT COUNT(*) AS total FROM notes WHERE DATE(note_date) = CURDATE()";
 $decidedCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE status = 'decided'";
 $abandonedCasesQuery = "SELECT COUNT(*) AS total FROM cases WHERE status = 'abandoned'";
@@ -452,7 +509,7 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <a href="./Case/allCases.php">
+                                            <a href="./index.php?allcase=1">
                                                 <div class="icon icon-box-success ">
                                                     <span class="mdi mdi-arrow-top-right icon-item"></span>
                                                 </div>

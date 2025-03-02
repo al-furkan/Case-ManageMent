@@ -15,6 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $status = $_POST['status'];
+    $position = $_POST['position'];
 
     // Handle image upload
     $image = $_FILES['image'];
@@ -23,13 +24,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $targetFile = $targetDir . $imageName;
     $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
 
+    // Check if uploads directory exists, if not create it
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+
     // Image validation
     $check = getimagesize($image['tmp_name']);
     if ($check === false) {
         die("<script>alert('File is not an image.'); window.history.back();</script>");
     }
 
-    if ($image['size'] > 5000000) {
+    if ($image['size'] > 5000000) { // Max size 5MB
         die("<script>alert('File is too large.'); window.history.back();</script>");
     }
 
@@ -38,8 +44,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if (move_uploaded_file($image['tmp_name'], $targetFile)) {
-        $stmt = $conn->prepare("INSERT INTO users (Name, Image, email, password, status) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $name, $targetFile, $email, $password, $status);
+        $stmt = $conn->prepare("INSERT INTO users (Name, Image, email, password, status, position) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $name, $targetFile, $email, $password, $status, $position);
 
         if ($stmt->execute()) {
             echo "<script>alert('User registered successfully!'); window.location.href='../index.php?register=1';</script>";
@@ -163,6 +169,14 @@ $conn->close();
                 <select class="form-control" id="status" name="status">
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="position">Position:</label>
+                <select class="form-control" id="position" name="position">
+                    <option value="admin">admin</option>
+                    <option value="user">user</option>
                 </select>
             </div>
 

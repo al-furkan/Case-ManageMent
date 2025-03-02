@@ -133,16 +133,55 @@ if ($conn->connect_error) {
             paging: true,
             searching: true
         });
-
-        $('#pdf').click(function() {
-            window.location.href = 'export_pdf.php';
-        });
-
-        $('#excel').click(function() {
-            window.location.href = 'export_excel.php';
-        });
     });
+    document.getElementById("pdf-visible").addEventListener("click", function() {
+        downloadPDF("visible");
+    });
+
+    document.getElementById("pdf").addEventListener("click", function() {
+        downloadPDF("full");
+    });
+
+    document.getElementById("excel").addEventListener("click", function() {
+        downloadExcel();
+    });
+
+    function downloadPDF(type) {
+        let table = document.querySelector("table"); // Adjust selector as needed
+        let opt = {
+            margin: 10,
+            filename: "Case_Management.pdf",
+            image: {
+                type: "jpeg",
+                quality: 0.98
+            },
+            html2canvas: {
+                scale: 2
+            },
+            jsPDF: {
+                unit: "mm",
+                format: "a4",
+                orientation: "landscape"
+            },
+        };
+
+        html2pdf()
+            .set(opt)
+            .from(table)
+            .save();
+    }
+
+    function downloadExcel() {
+        let table = document.querySelector("table"); // Adjust selector as needed
+        let wb = XLSX.utils.table_to_book(table, {
+            sheet: "Sheet1"
+        });
+        XLSX.writeFile(wb, "Case_Management.xlsx");
+    }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+
 </body>
 
 </html>

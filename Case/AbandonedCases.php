@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Database credentials
 $servername = 'localhost';
 $username = 'root';
@@ -12,6 +13,19 @@ $conn = new mysqli($servername, $username, $password, $database);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+if (!isset($_SESSION['id'])) {
+  header("Location: login.php");
+  exit();
+
+}
+$Id =  $_SESSION["id"];
+$get_user = "select * from users where id ='$Id'";
+$run_user = mysqli_query($conn, $get_user);
+$row_user=mysqli_fetch_array($run_user);
+ $id = $row_user['id'];
+ $position = $row_user['position'];
+
+
 
 ?>
 

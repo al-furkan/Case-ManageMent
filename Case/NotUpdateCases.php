@@ -95,14 +95,23 @@ if ($conn->connect_error) {
             </thead>
             <tbody>
                 <?php
-                // Define the threshold for last update (e.g., 30 days ago)
-                $dateThreshold = date('Y-m-d', strtotime('-30 days'));
+              // Get current date in 'YYYY-MM-DD' format
+$currentdate = date('Y-m-d');
 
-                // SQL query to fetch cases where last_updated is older than 30 days
-                $sql = "SELECT * FROM cases WHERE last_updated <= '$dateThreshold' AND status = 'Running'";
+$sql = "
+    SELECT c.* 
+    FROM cases c 
+    LEFT JOIN (
+        SELECT case_id, MAX(date) AS date FROM add_date GROUP BY case_id
+    ) a ON c.id = a.case_id
+    WHERE (a.date IS NULL OR a.date = '0000-00-00' OR a.date < '$currentdate')
+    AND c.status = 'Running';
+";
+
                 $result = $conn->query($sql);
+                $rowCount = $result->num_rows;
 
-                if ($result->num_rows > 0) {
+                if ($rowCount > 0) {
                     while ($row = $result->fetch_assoc()) {
                         echo "<tr>
                             <td>{$row['fileNo']}</td>
@@ -116,7 +125,7 @@ if ($conn->connect_error) {
                         </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='8'>No cases found that haven't been updated in the last 30 days</td></tr>";
+                    echo "<tr><td colspan='8' class='text-center'>No cases found that haven't been updated</td></tr>";
                 }
                 ?>
             </tbody>
@@ -134,15 +143,56 @@ if ($conn->connect_error) {
             searching: true
         });
 
-        $('#pdf').click(function() {
-            window.location.href = 'export_pdf.php';
-        });
-
-        $('#excel').click(function() {
-            window.location.href = 'export_excel.php';
-        });
+        // Disable export buttons if no data
+        if (<?php echo $rowCount; ?> === 0) {
+            $("#pdf, #pdf-visible, #excel").prop("disabled", true);
+        }
     });
+
+    document.getElementById("pdf-visible").addEventListener("click", function() {
+        downloadPDF("visible");
+    });
+
+    document.getElementById("pdf").addEventListener("click", function() {
+        downloadPDF("full");
+    });
+
+    document.getElementById("excel").addEventListener("click", function() {
+        downloadExcel();
+    });
+
+    function downloadPDF(type) {
+        let table = document.getElementById("notUpdateCasesTable");
+        let opt = {
+            margin: 10,
+            filename: "Case_Management.pdf",
+            image: {
+                type: "jpeg",
+                quality: 0.98
+            },
+            html2canvas: {
+                scale: 2
+            },
+            jsPDF: {
+                unit: "mm",
+                format: "a4",
+                orientation: "landscape"
+            },
+        };
+
+        html2pdf().set(opt).from(table).save();
+    }
+
+    function downloadExcel() {
+        let table = document.getElementById("notUpdateCasesTable");
+        let wb = XLSX.utils.table_to_book(table, {
+            sheet: "Sheet1"
+        });
+        XLSX.writeFile(wb, "Case_Management.xlsx");
+    }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
 </body>
 
 </html>

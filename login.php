@@ -7,8 +7,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-   
-
     // Query to fetch user
     $stmt = $conn->prepare("SELECT id, password FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
@@ -19,8 +17,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bind_result($id, $hashedPassword);
         $stmt->fetch();
 
-        // Verify password
-        if (md5($password) === $hashedPassword) {
+        // Verify password securely
+        if (password_verify($password, $hashedPassword)) {
             $_SESSION['id'] = $id;
             header("Location: index.php"); // Redirect to a secure page
             exit();
@@ -39,34 +37,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
 
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css"
-        rel="stylesheet">
-    <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <title>Case-Management</title>
 </head>
+
 <body>
     <section class="vh-100" style="background-color: #508bfc;">
         <div class="container py-5 h-100">
-            <div
-                class="row d-flex justify-content-center align-items-center h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
                 <div class="col-12 col-md-8 col-lg-6 col-xl-5">
                     <div class="card shadow-2-strong" style="border-radius: 1rem;">
                         <div class="card-body p-5 text-center">
 
                             <h3 class="mb-5">Sign in case-Management</h3>
                             <?php if (!empty($alertMessage)): ?>
-                                <div class="alert alert-danger" role="alert">
-                                    <?= $alertMessage ?>
-                                </div>
+                            <div class="alert alert-danger" role="alert">
+                                <?= $alertMessage ?>
+                            </div>
                             <?php endif; ?>
                             <form action="login.php" method="POST" enctype="multipart/form-data">
                                 <div data-mdb-input-init class="form-outline mb-4">
@@ -81,8 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <label class="form-label" for="typePasswordX-2">Password</label>
                                 </div>
 
-                                <button data-mdb-button-init
-                                    class="btn btn-primary btn-lg btn-block" type="submit">Login</button>
+                                <button data-mdb-button-init class="btn btn-primary btn-lg btn-block"
+                                    type="submit">Login</button>
 
                                 <hr class="my-4">
                             </form>
@@ -93,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </section>
 
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.js"></script>
 </body>
+
 </html>
