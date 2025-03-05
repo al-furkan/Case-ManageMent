@@ -21,9 +21,11 @@ if (isset($_GET['id'])) {
     $stmt->bind_param("i", $caseId);
     
     if ($stmt->execute()) {
-        echo "<script>alert('Case deleted successfully!'); window.location.href='./allCases.php';</script>";
+        echo "<script>alert('Case deleted successfully!');window.location.href = '../index.php?allcase=1';</script>";
+        
     } else {
         echo "<script>alert('Error: " . $stmt->error . "');</script>";
+        echo "<script>window.location.href = '../index.php?allcase=1';</script>";
     }
 }
 ?>

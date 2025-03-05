@@ -226,6 +226,7 @@
                                         class='fas fa-user-plus'></i> Add Party Details</a>
                                 <a href='./Case/add_details.php?case_id={$row['id']}' class='dropdown-item'><i
                                         class='fas fa-file-alt'></i> Add More Details</a>
+                                         <a href='./Case/Add_file.php?id={$row['id']}' class='dropdown-item'><i class='fas fa-file-pdf'></i>Upload File</a>
                                 <a href='./Case/add_payment.php?case_id={$row['id']}' class='dropdown-item'><i
                                         class='fas fa-dollar-sign'></i> Add Payment</a>
                                 <a href='./Case/show_details.php?id={$row['id']}' class='dropdown-item'><i

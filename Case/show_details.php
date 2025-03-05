@@ -37,6 +37,7 @@ if (!$case) {
 
 // Fetch related details
 $add_date_result = fetchData($conn, "SELECT * FROM add_date WHERE case_id = ? ORDER BY last_updated DESC", $case_id);
+$add_File = fetchData($conn, "SELECT * FROM file WHERE case_id = ? ORDER BY id DESC", $case_id);
 $party_result = fetchData($conn, "SELECT * FROM party_details WHERE case_id = ?", $case_id);
 $case_details_result = fetchData($conn, "SELECT * FROM case_details WHERE case_id = ?", $case_id);
 $payment_result = fetchData($conn, "SELECT * FROM payments WHERE case_id = ?", $case_id);
@@ -147,6 +148,7 @@ $payment_result = fetchData($conn, "SELECT * FROM payments WHERE case_id = ?", $
             </div>
         </div>
 
+
         <!-- Date Details -->
         <div class="card mb-4">
             <div class="card-header">
@@ -170,6 +172,33 @@ $payment_result = fetchData($conn, "SELECT * FROM payments WHERE case_id = ?", $
                             <td><?= $row['date'] ?></td>
                             <td><?= $row['fixedFor'] ?></td>
                             <td><?= $row['last_updated'] ?></td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- File Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3><i class="fas fa-folder"></i> Files</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered text-white">
+                    <thead>
+                        <tr>
+                            <th>Sr_No</th>
+                            <th>File</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $i = 1; while ($file = $add_File->fetch_assoc()) { ?>
+                        <tr>
+                            <td><?= $i++ ?></td>
+                            <td><a href="uploads/<?= htmlspecialchars($file['filename']) ?>" class="text-warning"
+                                    download><i class="fas fa-download"></i> Download</a></td>
+                            <td><?= htmlspecialchars($file['last_updated']) ?></td>
                         </tr>
                         <?php } ?>
                     </tbody>
