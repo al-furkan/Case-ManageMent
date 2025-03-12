@@ -14,6 +14,7 @@ if ($conn->connect_error) {
 }
 
 // Fetch existing case details
+$case = null;
 if (isset($_GET['id'])) {
     $caseId = (int) $_GET['id'];
     $query = "SELECT * FROM cases WHERE id = ?";
@@ -22,6 +23,14 @@ if (isset($_GET['id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     $case = $result->fetch_assoc();
+
+    if (!$case) {
+        echo "<script>alert('Case not found');</script>";
+        exit();
+    }
+} else {
+    echo "<script>alert('No case ID provided');</script>";
+    exit();
 }
 
 // Handle update request
@@ -38,15 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $mobileNo = htmlspecialchars(trim($_POST['mobileNo']));
     $appointedBy = htmlspecialchars(trim($_POST['appointedBy']));
     $lawSection = htmlspecialchars(trim($_POST['lawSection']));
+    $hearing_date = htmlspecialchars(trim($_POST['hearing_date']));
     $comments = htmlspecialchars(trim($_POST['comments']));
     $status = htmlspecialchars(trim($_POST['status']));
 
-    $query = "UPDATE cases SET fileNo=?, caseNo=?, case_types=?, court=?, police_stations=?, date=?, fixedFor=?, firstParty=?, secondParty=?, mobileNo=?, appointedBy=?, lawSection=?, comments=?, status=? WHERE id=?";
+    $query = "UPDATE cases SET fileNo=?, caseNo=?, case_types=?, court=?, police_stations=?, date=?, fixedFor=?, firstParty=?, secondParty=?, mobileNo=?, appointedBy=?, lawSection=?, comments=?, status=?, hearing_date=? WHERE id=?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("ssiiisssssssssi", $fileNo, $caseNo, $caseType, $court, $policeStation, $date, $fixedFor, $firstParty, $secondParty, $mobileNo, $appointedBy, $lawSection, $comments, $status, $caseId);
-    
+    $stmt->bind_param("ssiiissssssssssi", $fileNo, $caseNo, $caseType, $court, $policeStation, $date, $fixedFor, $firstParty, $secondParty, $mobileNo, $appointedBy, $lawSection, $comments, $status, $hearing_date, $caseId);
+
     if ($stmt->execute()) {
-        header('Location: ./allCases.php');
+        echo "<script>window.location.href = '../index.php?allcase=1';</script>";
         exit();
     } else {
         echo "<script>alert('Error: " . $stmt->error . "');</script>";
@@ -102,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="col-lg-10">
                 <div class="form-container">
                     <h1 class="text-center">Update Case</h1>
-                    <form id="caseForm" action="" method="POST">
+                    <form id="caseForm" action="./edit_case.php?id=29" method="POST">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="fileNo" class="form-label">File No</label>
@@ -119,12 +129,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <select class="form-select" id="caseType" name="caseType" required>
                                     <option selected disabled>--Select a Case Type--</option>
                                     <?php
-                $result = $conn->query("SELECT id, name FROM case_types");
-                while ($row = $result->fetch_assoc()) {
-                    $selected = ($row['id'] == $case['case_types']) ? 'selected' : '';
-                    echo "<option value='" . $row['id'] . "' $selected>" . $row['name'] . "</option>";
-                }
-                ?>
+                                    $result = $conn->query("SELECT id, name FROM case_types");
+                                    while ($row = $result->fetch_assoc()) {
+                                        $selected = ($row['id'] == $case['case_types']) ? 'selected' : '';
+                                        echo "<option value='" . $row['id'] . "' $selected>" . $row['name'] . "</option>";
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -132,12 +142,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <select class="form-select" id="court" name="court" required>
                                     <option selected disabled>--Select Court--</option>
                                     <?php
-                $result = $conn->query("SELECT id, court_name FROM courts");
-                while ($row = $result->fetch_assoc()) {
-                    $selected = ($row['id'] == $case['court']) ? 'selected' : '';
-                    echo "<option value='" . $row['id'] . "' $selected>" . $row['court_name'] . "</option>";
-                }
-                ?>
+                                    $result = $conn->query("SELECT id, court_name FROM courts");
+                                    while ($row = $result->fetch_assoc()) {
+                                        $selected = ($row['id'] == $case['court']) ? 'selected' : '';
+                                        echo "<option value='" . $row['id'] . "' $selected>" . $row['court_name'] . "</option>";
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -145,12 +155,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <select class="form-select" id="policeStation" name="policeStation">
                                     <option selected disabled>--Select Police Station--</option>
                                     <?php
-                $result = $conn->query("SELECT id, name FROM police_stations");
-                while ($row = $result->fetch_assoc()) {
-                    $selected = ($row['id'] == $case['police_stations']) ? 'selected' : '';
-                    echo "<option value='" . $row['id'] . "' $selected>" . $row['name'] . "</option>";
-                }
-                ?>
+                                    $result = $conn->query("SELECT id, name FROM police_stations");
+                                    while ($row = $result->fetch_assoc()) {
+                                        $selected = ($row['id'] == $case['police_stations']) ? 'selected' : '';
+                                        echo "<option value='" . $row['id'] . "' $selected>" . $row['name'] . "</option>";
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -188,6 +198,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <input type="text" class="form-control" id="lawSection" name="lawSection"
                                     value="<?= $case['lawSection']; ?>">
                             </div>
+                            <div class="col-md-6">
+                                <label for="hearing_date" class="form-label">Hearing Date:</label>
+                                <input type="date" class="form-control" id="hearing_date" name="hearing_date"
+                                    value="<?= $case['hearing_date']; ?>">
+                            </div>
+
                             <div class="col-md-12">
                                 <label for="comments" class="form-label">Comments</label>
                                 <textarea class="form-control" id="comments" name="comments"

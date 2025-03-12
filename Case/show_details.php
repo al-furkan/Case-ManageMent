@@ -29,11 +29,35 @@ function fetchData($conn, $sql, $param) {
 }
 
 // Fetch case details
-$case_result = fetchData($conn, "SELECT * FROM cases WHERE id = ?", $case_id);
+$case_result = fetchData($conn, "SELECT 
+                cases.fileNo, 
+                case_types.name AS case_types, 
+                cases.caseNo, 
+                courts.court_name AS court, 
+                police_stations.name AS police_stations, 
+                cases.firstParty, 
+                cases.secondParty, 
+                cases.lawSection, 
+                cases.date, 
+                cases.hearing_date, 
+                cases.fixedFor, 
+                cases.mobileNo,
+                cases.appointedBy,
+                cases.comments,
+                cases.status,
+                cases.last_updated,
+                cases.id
+            FROM cases
+            LEFT JOIN case_types ON cases.case_types = case_types.id
+            LEFT JOIN courts ON cases.court = courts.id
+            LEFT JOIN police_stations ON cases.police_stations = police_stations.id 
+            WHERE cases.id = ?", $case_id);
+
 $case = $case_result->fetch_assoc();
 if (!$case) {
     die("Case not found.");
 }
+
 
 // Fetch related details
 $add_date_result = fetchData($conn, "SELECT * FROM add_date WHERE case_id = ? ORDER BY last_updated DESC", $case_id);
@@ -117,7 +141,7 @@ $payment_result = fetchData($conn, "SELECT * FROM payments WHERE case_id = ?", $
                         <td><?= htmlspecialchars($case['caseNo']) ?></td>
                     </tr>
                     <tr>
-                        <th>Type:</th>
+                        <th>Case Type:</th>
                         <td><?= htmlspecialchars($case['case_types']) ?></td>
                     </tr>
                     <tr>
@@ -137,13 +161,49 @@ $payment_result = fetchData($conn, "SELECT * FROM payments WHERE case_id = ?", $
                         <td><?= htmlspecialchars($case['fixedFor']) ?></td>
                     </tr>
                     <tr>
+                        <th>First Party:</th>
+                        <td><?= htmlspecialchars($case['firstParty']) ?></td>
+                    </tr>
+
+                    <tr>
+                        <th>Second Party</th>
+                        <td><?= htmlspecialchars($case['secondParty']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Mobile Number</th>
+                        <td><?= htmlspecialchars($case['mobileNo']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Appointed By</th>
+                        <td><?= htmlspecialchars($case['appointedBy']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Mobile Number</th>
+                        <td><?= htmlspecialchars($case['mobileNo']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Previous Date</th>
+                        <td><?= date("d-m-Y", strtotime($case['date'])) ?></td>
+                    </tr>
+
+                    <tr>
+                        <th>Hearing Date:</th>
+                        <td><?= date("d-m-Y", strtotime($case['hearing_date'])) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Comment</th>
+                        <td><?= htmlspecialchars($case['comments']) ?></td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated</th>
+                        <td><?= date("d-m-Y H:i:s", strtotime($case['last_updated'])) ?></td>
+
+                    </tr>
+                    <tr>
                         <th>Status:</th>
                         <td><span class="badge badge-success"><?= htmlspecialchars($case['status']) ?></span></td>
                     </tr>
-                    <tr>
-                        <th>Hearing Date:</th>
-                        <td><?= htmlspecialchars($case['hearing_date']) ?></td>
-                    </tr>
+
                 </table>
             </div>
         </div>
@@ -196,9 +256,9 @@ $payment_result = fetchData($conn, "SELECT * FROM payments WHERE case_id = ?", $
                         <?php $i = 1; while ($file = $add_File->fetch_assoc()) { ?>
                         <tr>
                             <td><?= $i++ ?></td>
-                            <td><a href="uploads/<?= htmlspecialchars($file['filename']) ?>" class="text-warning"
-                                    download><i class="fas fa-download"></i> Download</a></td>
-                            <td><?= htmlspecialchars($file['last_updated']) ?></td>
+                            <td><a href="<?= htmlspecialchars($file['file_path']) ?>" class="text-warning" download><i
+                                        class="fas fa-download"></i> Download</a></td>
+                            <td><?= htmlspecialchars($file['uploaded_at']) ?></td>
                         </tr>
                         <?php } ?>
                     </tbody>
@@ -287,7 +347,7 @@ $payment_result = fetchData($conn, "SELECT * FROM payments WHERE case_id = ?", $
                             <td><?= htmlspecialchars($payment['name']) ?></td>
                             <td><?= htmlspecialchars($payment['payment_type']) ?></td>
                             <td><?= htmlspecialchars($payment['amount']) ?></td>
-                            <td><?= htmlspecialchars($payment['payment_date']) ?></td>
+                            <td><?= date("d-m-Y", strtotime($payment['payment_date'])) ?></td>
                         </tr>
                         <?php } ?>
                     </tbody>

@@ -54,17 +54,21 @@ if ($position === "admin") {
 
                 if (mysqli_stmt_execute($updateStmt)) {
                     header("Location: show_details.php?id=$case_id&msg=File uploaded successfully!&type=success");
+                    echo "<script>window.location.href = '../index.php?allcase=1';</script>";
                 } else {
                     header("Location: show_details.php?id=$case_id&msg=Error updating case!&type=danger");
+                    echo "<script>window.location.href = '../index.php?allcase=1';</script>";
                 }
                 mysqli_stmt_close($updateStmt);
             } else {
                 header("Location: show_details.php?id=$case_id&msg=Error inserting file record!&type=danger");
+                echo "<script>window.location.href = '../index.php?allcase=1';</script>";
             }
 
             mysqli_stmt_close($stmt);
         } else {
             header("Location: update_case_date.php?msg=File upload failed!&type=danger");
+            echo "<script>window.location.href = '../index.php?allcase=1';</script>";
         }
 
         mysqli_close($conn);
@@ -139,7 +143,7 @@ if ($position === "admin") {
                 </div>
                 <?php } ?>
 
-                <form action="add_file.php" method="POST" enctype="multipart/form-data">
+                <form action="Add_file.php" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="case_id" value="<?php echo $row['id']; ?>">
 
                     <div class="mb-3">

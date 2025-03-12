@@ -22,6 +22,22 @@ if ($conn->connect_error) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cases Not Updated</title>
+    <!-- plugins:css -->
+    <link rel="stylesheet" href="assets/vendors/mdi/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="assets/vendors/css/vendor.bundle.base.css">
+    <!-- endinject -->
+    <!-- Plugin css for this page -->
+    <link rel="stylesheet" href="../assets/vendors/jvectormap/jquery-jvectormap.css">
+    <link rel="stylesheet" href="../assets/vendors/flag-icon-css/css/flag-icon.min.css">
+    <link rel="stylesheet" href="../assets/vendors/owl-carousel-2/owl.carousel.min.css">
+    <link rel="stylesheet" href="../assets/vendors/owl-carousel-2/owl.theme.default.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- End plugin css for this page -->
+    <!-- inject:css -->
+    <!-- endinject -->
+    <!-- Layout styles -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
@@ -88,25 +104,34 @@ if ($conn->connect_error) {
                     <th>Case No</th>
                     <th>Court</th>
                     <th>Police Station</th>
+                    <th>1<sup>st</sup> Party</th>
+                    <th>2<sup>nd</sup> Party</th>
                     <th>Law & Section</th>
                     <th>Last Updated</th>
                     <th>Status</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
               // Get current date in 'YYYY-MM-DD' format
-$currentdate = date('Y-m-d');
+$currentdate = date('d-m-Y');
 
 $sql = "
-    SELECT c.* 
+    SELECT c.id, c.fileNo, c.caseNo, 
+           ct.name, 
+           co.court_name, 
+           ps.name, 
+           c.date, c.fixedFor, c.firstParty, c.secondParty, 
+           c.mobileNo, c.appointedBy, c.lawSection, 
+           c.comments, c.status, c.hearing_date, c.last_updated
     FROM cases c 
-    LEFT JOIN (
-        SELECT case_id, MAX(date) AS date FROM add_date GROUP BY case_id
-    ) a ON c.id = a.case_id
-    WHERE (a.date IS NULL OR a.date = '0000-00-00' OR a.date < '$currentdate')
-    AND c.status = 'Running';
+    LEFT JOIN case_types ct ON c.case_types = ct.id
+    LEFT JOIN courts co ON c.court = co.id
+    LEFT JOIN police_stations ps ON c.police_stations = ps.id
+    WHERE c.status = 'Running';
 ";
+
 
                 $result = $conn->query($sql);
                 $rowCount = $result->num_rows;
@@ -114,15 +139,42 @@ $sql = "
                 if ($rowCount > 0) {
                     while ($row = $result->fetch_assoc()) {
                         echo "<tr>
-                            <td>{$row['fileNo']}</td>
-                            <td>{$row['case_types']}</td>
-                            <td>{$row['caseNo']}</td>
-                            <td>{$row['court']}</td>
-                            <td>{$row['police_stations']}</td>
-                            <td>{$row['lawSection']}</td>
-                            <td>{$row['last_updated']}</td>
-                            <td><span class='badge badge-success'>{$row['status']}</span></td>
-                        </tr>";
+                        <td>{$row['fileNo']}</td>
+                        <td>{$row['name']}</td>
+                        <td>{$row['caseNo']}</td>
+                        <td>{$row['court_name']}</td>
+                        <td>{$row['name']}</td>
+                        <td>{$row['firstParty']}</td>
+                        <td>{$row['secondParty']}</td>
+                        <td>{$row['lawSection']}</td>
+                        <td>{$row['last_updated']}</td>
+                        <td><span class='badge badge-success'>{$row['status']}</span></td>
+                        <td>
+                            <div class='dropdown'>
+                                <button class='btn btn-custom btn-sm dropdown-toggle' type='button' data-toggle='dropdown'>
+                                    <i class='fas fa-cogs'></i> Actions
+                                </button>
+                                <div class='dropdown-menu action-menu'>
+                                    <a href='./Case/add_date.php?id={$row['id']}' class='dropdown-item'><i
+                                            class='fas fa-calendar-plus'></i> Add Next Date</a>
+                                    <a href='./Case/edit_case.php?id={$row['id']}' class='dropdown-item'><i
+                                            class='fas fa-edit'></i> Edit Case</a>
+                                    <a href='./Case/add_party.php?case_id={$row['id']}' class='dropdown-item'><i
+                                            class='fas fa-user-plus'></i> Add Party Details</a>
+                                    <a href='./Case/add_details.php?case_id={$row['id']}' class='dropdown-item'><i
+                                            class='fas fa-file-alt'></i> Add More Details</a>
+                                    <a href='./Case/Add_file.php?id={$row['id']}' class='dropdown-item'><i class='fas fa-file-pdf'></i>Upload File</a>
+                                    <a href='./Case/add_payment.php?case_id={$row['id']}' class='dropdown-item'><i
+                                            class='fas fa-dollar-sign'></i> Add Payment</a>
+                                    <a href='./Case/show_details.php?id={$row['id']}' class='dropdown-item'><i
+                                            class='fas fa-eye'></i> Show/Edit Details</a>
+                                    <a href='./Case/delete.php?id={$row['id']}' class='dropdown-item text-danger'><i
+                                            class='fas fa-trash'></i> Delete Case</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>";
+                    
                     }
                 } else {
                     echo "<tr><td colspan='8' class='text-center'>No cases found that haven't been updated</td></tr>";
@@ -193,6 +245,8 @@ $sql = "
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="../assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="../assets/js/misc.js"></script>
 </body>
 
 </html>

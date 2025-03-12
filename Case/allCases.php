@@ -38,6 +38,7 @@
 
     .table {
         background-color: #2c2c2c;
+        min-height: 300px;
     }
 
     .table thead th {
@@ -165,7 +166,8 @@
             </div>
         </div>
 
-        <table id="casesTable" class="table table-bordered table-hover text-white" style="width: 100%">
+        <table id="casesTable" class="table-responsive table table-bordered table-hover table-striped text-white"
+            style="width: 100%">
             <thead>
                 <tr>
                     <th>File No</th>
@@ -173,6 +175,8 @@
                     <th>Case No</th>
                     <th>Court</th>
                     <th>Police Station</th>
+                    <th>1<sup>st</sup> Party</th>
+                    <th>2<sup>nd</sup> Party</th>
                     <th>Law & Section</th>
                     <th>Previous Date</th>
                     <th>Next Date</th>
@@ -196,54 +200,71 @@
                 if ($conn->connect_error) {
                     die("Connection failed: " . $conn->connect_error);
                 }
-
-                $sql = "SELECT * FROM cases";
-                $result = $conn->query($sql);
-                if ($result->num_rows > 0) {
+                $sql = "SELECT 
+                cases.fileNo, 
+                case_types.name AS case_types, 
+                cases.caseNo, 
+                courts.court_name AS court, 
+                police_stations.name AS police_stations, 
+                cases.firstParty, 
+                cases.secondParty, 
+                cases.lawSection, 
+                cases.date AS previous_date, 
+                cases.hearing_date, 
+                cases.fixedFor, 
+                cases.status, 
+                cases.id
+            FROM cases
+            LEFT JOIN case_types ON cases.case_types = case_types.id
+            LEFT JOIN courts ON cases.court = courts.id
+            LEFT JOIN police_stations ON cases.police_stations = police_stations.id";
+            
+            $result = $conn->query($sql);
+            if ($result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
-                echo "<tr>
-                    <td>{$row['fileNo']}</td>
-                    <td>{$row['case_types']}</td>
-                    <td>{$row['caseNo']}</td>
-                    <td>{$row['court']}</td>
-                    <td>{$row['police_stations']}</td>
-                    <td>{$row['lawSection']}</td>
-                    <td>{$row['date']}</td>
-                    <td>{$row['date']}</td>
-                    <td>{$row['fixedFor']}</td>
-                    <td><span class='badge badge-success'>{$row['status']}</span></td>
-                    <td>
-                        <div class='dropdown'>
-                            <button class='btn btn-custom btn-sm dropdown-toggle' type='button' data-toggle='dropdown'>
-                                <i class='fas fa-cogs'></i> Actions
-                            </button>
-                            <div class='dropdown-menu action-menu'>
-                                <a href='./Case/add_date.php?id={$row['id']}' class='dropdown-item'><i
-                                        class='fas fa-calendar-plus'></i> Add Next Date</a>
-                                <a href='./Case/edit_case.php?id={$row['id']}' class='dropdown-item'><i
-                                        class='fas fa-edit'></i> Edit Case</a>
-                                <a href='./Case/add_party.php?case_id={$row['id']}' class='dropdown-item'><i
-                                        class='fas fa-user-plus'></i> Add Party Details</a>
-                                <a href='./Case/add_details.php?case_id={$row['id']}' class='dropdown-item'><i
-                                        class='fas fa-file-alt'></i> Add More Details</a>
-                                         <a href='./Case/Add_file.php?id={$row['id']}' class='dropdown-item'><i class='fas fa-file-pdf'></i>Upload File</a>
-                                <a href='./Case/add_payment.php?case_id={$row['id']}' class='dropdown-item'><i
-                                        class='fas fa-dollar-sign'></i> Add Payment</a>
-                                <a href='./Case/show_details.php?id={$row['id']}' class='dropdown-item'><i
-                                        class='fas fa-eye'></i> Show/Edit Details</a>
-                                <a href='./Case/delete.php?id={$row['id']}' class='dropdown-item text-danger'><i
-                                        class='fas fa-trash'></i> Delete Case</a>
+                    // Convert date format to d-m-Y
+                    $previous_date = date("d-m-Y", strtotime($row['previous_date']));
+                    $hearing_date = date("d-m-Y", strtotime($row['hearing_date']));
+            
+                    echo "<tr>
+                        <td>{$row['fileNo']}</td>
+                        <td>{$row['case_types']}</td>
+                        <td>{$row['caseNo']}</td>
+                        <td>{$row['court']}</td>
+                        <td>{$row['police_stations']}</td>
+                        <td>{$row['firstParty']}</td>
+                        <td>{$row['secondParty']}</td>
+                        <td>{$row['lawSection']}</td>
+                        <td>{$previous_date}</td>
+                        <td>{$hearing_date}</td>
+                        <td>{$row['fixedFor']}</td>
+                        <td><span class='badge badge-success'>{$row['status']}</span></td>
+                        <td>
+                            <div class='dropdown'>
+                                <button class='btn btn-custom btn-sm dropdown-toggle' type='button' data-toggle='dropdown'>
+                                    <i class='fas fa-cogs'></i> Actions
+                                </button>
+                                <div class='dropdown-menu action-menu'>
+                                    <a href='./Case/add_date.php?id={$row['id']}' class='dropdown-item'><i class='fas fa-calendar-plus'></i> Add Next Date</a>
+                                    <a href='./Case/edit_case.php?id={$row['id']}' class='dropdown-item'><i class='fas fa-edit'></i> Edit Case</a>
+                                    <a href='./Case/add_party.php?case_id={$row['id']}' class='dropdown-item'><i class='fas fa-user-plus'></i> Add Party Details</a>
+                                    <a href='./Case/add_details.php?case_id={$row['id']}' class='dropdown-item'><i class='fas fa-file-alt'></i> Add More Details</a>
+                                    <a href='./Case/Add_file.php?id={$row['id']}' class='dropdown-item'><i class='fas fa-file-pdf'></i> Upload File</a>
+                                    <a href='./Case/add_payment.php?case_id={$row['id']}' class='dropdown-item'><i class='fas fa-dollar-sign'></i> Add Payment</a>
+                                    <a href='./Case/show_details.php?id={$row['id']}' class='dropdown-item'><i class='fas fa-eye'></i> Show/Edit Details</a>
+                                    <a href='./Case/delete.php?id={$row['id']}' class='dropdown-item text-danger'><i class='fas fa-trash'></i> Delete Case</a>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>";
+                        </td>
+                    </tr>";
                 }
-                } else {
+            } else {
                 echo "<tr>
                     <td colspan='15'>No cases found</td>
                 </tr>";
-                }
-                ?>
+            }
+            ?>
+
             </tbody>
         </table>
         <?php
