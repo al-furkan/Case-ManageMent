@@ -50,8 +50,7 @@ if ($conn->connect_error) {
 
     .table th,
     .table td {
-        text-align: center;
-        vertical-align: middle;
+        font-size: 12px;
     }
 
     .table {
@@ -96,7 +95,8 @@ if ($conn->connect_error) {
             </div>
         </div>
 
-        <table id="notUpdateCasesTable" class="table table-bordered table-hover text-white" style="width: 100%">
+        <table id="notUpdateCasesTable" class=" table-responsiv table table-bordered table-hover text-white"
+            style="width: 100%">
             <thead>
                 <tr>
                     <th>File No</th>
@@ -107,7 +107,9 @@ if ($conn->connect_error) {
                     <th>1<sup>st</sup> Party</th>
                     <th>2<sup>nd</sup> Party</th>
                     <th>Law & Section</th>
-                    <th>Last Updated</th>
+                    <th>Previous Date</th>
+                    <th>Next Date</th>
+                    <th>Fixed For</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -118,13 +120,23 @@ if ($conn->connect_error) {
 $currentdate = date('d-m-Y');
 
 $sql = "
-    SELECT c.id, c.fileNo, c.caseNo, 
+    SELECT c.id,
+           c.fileNo,
+           c.caseNo, 
            ct.name, 
            co.court_name, 
            ps.name, 
-           c.date, c.fixedFor, c.firstParty, c.secondParty, 
-           c.mobileNo, c.appointedBy, c.lawSection, 
-           c.comments, c.status, c.hearing_date, c.last_updated
+           c.date,
+            c.fixedFor,
+             c.firstParty,
+              c.secondParty, 
+           c.mobileNo,
+            c.appointedBy,
+             c.lawSection, 
+           c.comments,
+            c.status,
+             c.hearing_date,
+              c.last_updated
     FROM cases c 
     LEFT JOIN case_types ct ON c.case_types = ct.id
     LEFT JOIN courts co ON c.court = co.id
@@ -138,6 +150,11 @@ $sql = "
 
                 if ($rowCount > 0) {
                     while ($row = $result->fetch_assoc()) {
+
+
+                         // Convert date format to d-m-Y
+                    $previous_date = date("d-m-Y", strtotime($row['date']));
+                    $hearing_date = date("d-m-Y", strtotime($row['hearing_date']));
                         echo "<tr>
                         <td>{$row['fileNo']}</td>
                         <td>{$row['name']}</td>
@@ -147,7 +164,9 @@ $sql = "
                         <td>{$row['firstParty']}</td>
                         <td>{$row['secondParty']}</td>
                         <td>{$row['lawSection']}</td>
-                        <td>{$row['last_updated']}</td>
+                         <td>{$previous_date}</td>
+                        <td>{$hearing_date}</td>
+                        <td>{$row['fixedFor']}</td>
                         <td><span class='badge badge-success'>{$row['status']}</span></td>
                         <td>
                             <div class='dropdown'>

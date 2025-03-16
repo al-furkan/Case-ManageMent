@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="col-lg-10">
                 <div class="form-container">
                     <h1 class="text-center">Update Case</h1>
-                    <form id="caseForm" action="./edit_case.php?id=29" method="POST">
+                    <form id="caseForm" action="./edit_case.php?id=<?php echo $caseId; ?>" method="POST">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="fileNo" class="form-label">File No</label>

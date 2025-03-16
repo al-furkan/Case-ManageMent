@@ -155,7 +155,8 @@ $row_user=mysqli_fetch_array($run_user);
                             <?php } ?>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['allcase']) ? 'active' : ''); ?>"
-                                    href="./index.php?allcase=1">All Cases</a>
+                                    href="./Case/CasesAll.php">All
+                                    Cases</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link <?php echo (isset($_GET['runningcase']) ? 'active' : ''); ?>"
@@ -509,7 +510,7 @@ $abandonedCases = $conn->query($abandonedCasesQuery)->fetch_assoc()['total'];
                                             </div>
                                         </div>
                                         <div class="col-3">
-                                            <a href="./index.php?allcase=1">
+                                            <a href="./Case/allCases.php">
                                                 <div class="icon icon-box-success ">
                                                     <span class="mdi mdi-arrow-top-right icon-item"></span>
                                                 </div>

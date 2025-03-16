@@ -24,10 +24,8 @@
 
     .table th,
     .table td {
-        text-align: center;
-        vertical-align: middle;
+
         font-size: 12px;
-        width: 50px;
     }
 
     .action-menu {
@@ -134,6 +132,7 @@
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1><i class="fas fa-balance-scale"></i> Case Management</h1>
+            <a href="../index.php" class="btn btn-primary text-decoration-none">Back to Dashboard</a>
 
             <div>
                 <button class="btn btn-dark btn-sm" id="pdf-visible"><i class="fas fa-file-pdf"></i> PDF
@@ -168,8 +167,7 @@
             </div>
         </div>
 
-        <table id="casesTable" class="table-responsive table table-bordered table-hover table-striped text-white"
-            style="width: 100%">
+        <table id="casesTable" class="table-responsive table table-bordered table-hover table-striped text-white w-100">
             <thead>
                 <tr>
                     <th>File No</th>
@@ -430,6 +428,8 @@ $result = $conn->query($sql);
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="../assets/vendors/js/vendor.bundle.base.js"></script>
+    <script src="../assets/js/misc.js"></script>
 
 </body>
 
